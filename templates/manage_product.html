@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Vue product Management</title>
+    <style>
+        [v-cloak] { display: none; }
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 40px;
+            background: #f4f4f9;
+            color: #333;
+        }
+        #app {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            /*max-width: 600px;*/
+            margin: 0 auto;
+        }
+        input[type="text"] {
+            padding: 10px;
+            margin: 10px 0;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            width: calc(100% - 24px);
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #5cb85c;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        button:hover {
+            background-color: #4cae4c;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            padding: 10px;
+            margin-top: 1px;
+            border-bottom: solid 1px #eee;
+        }
+
+        .a_link {
+            color: rgb(148, 107, 222);
+            text-decoration: none;
+        }
+
+        .a_link:hover{
+            opacity: 0.8;
+
+        }
+
+        .delete_button {
+            background-color: white;
+            color: rgb(148, 107, 222);
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            border: solid 1px;
+            padding-left: 11px;
+            padding-right: 9px;
+            padding-top: 5px;
+            padding-bottom: 5px;
+            box-shadow: none;
+            float: right;
+            margin-top: 0px;
+        }
+
+        .delete_button:hover {
+            background-color: rgba(254, 254, 254, 0.29);
+            color: #ddd;
+            /*border: solid 1px rgb(148, 107, 222);*/
+        }
+
+        .name-column {
+            width: 20%; /* 让这两列根据内容自适应宽度 */
+        }
+
+         .url-column{
+            width: 20%; /* 让这两列根据内容自适应宽度 */
+
+         }
+        .description-column {
+            width: 50%; /* 描述列较宽，因为描述可能较长 */
+        }
+        .action-column {
+            width: 10%; /* 动作列固定宽度，只包含按钮 */
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div style="width: 80%; margin-left: 10%">
+        <h1>Product Management  </h1>
+
+        <input type="text" v-model="newProductName" placeholder="Enter new product name">
+        <input type="text" v-model="newProductURL" placeholder="Enter product URL">
+        <input type="text" v-model="newProductDescription" placeholder="Enter product description">
+
+
+        <button @click="addproduct()">Add product</button>
+
+        </div>
+        <table style="margin-top: 3%">
+           <tr>
+                 <th class="name-column">Name</th>
+                    <th class="url-column">URL</th>
+                    <th class="description-column">Description</th>
+                    <th class="action-column"></th>
+            </tr>
+            {% for product in products %}
+            <tr style="    text-align: center;">
+                <td class="name-column">{{ product.name }}</td>
+                <td class="url-column"><a class="a_link" href="{{ product.url }}" target="_blank">{{ product.url }}</a></td>
+                <td class="description-column" >{{ product.description }}</td>
+                <td  class="action-column" ><button class="delete_button" @click="deleteProduct({{ product.id }})">Delete</button></td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <script src="/static/js/vue.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script>
+        new Vue({
+            el: '#app',
+            delimiters: ['[[', ']]'],
+            data: {
+                products: [],
+                newProductName: '',
+                newProductURL: '',
+                newProductDescription: '',
+                newProductCategoryId: null,
+                newproduct: ''
+            },
+            created() {
+
+                this.categoryId = window.location.pathname.split("/")[2]; // 假设 URL 是 ?category_id=3
+            },
+            mounted() {
+                // this.getproducts();
+            },
+            methods: {
+
+                addproduct() {
+                    this.categoryId = window.location.pathname.split("/")[2];
+                    axios.post(`/products/${this.categoryId}`, {
+                            name: this.newProductName,
+                            url: this.newProductURL,
+                            description: this.newProductDescription,
+                            category_id: this.categoryId
+                        })
+                        .then(response => {
+                            this.products.push(response.data);
+                            this.newProductName = '';
+                            this.newProductURL = '';
+                            this.newProductDescription = '';
+                            this.newProductCategoryId = null;
+                               window.location.reload();
+                        })
+                        .catch(error => {
+                            console.error('Error adding product!', error);
+                        });
+                },
+                deleteProduct(id) {
+                    console.log("!@3");
+                    console.log(id);
+                    axios.delete(`/delete_product/${id}`)
+                        .then(response => {
+                            this.products = this.products.filter(c => c.id !== id);
+                            window.location.reload();
+                        })
+                        .catch(error => {
+                            console.error('Error deleting product!', error);
+                        });
+                }
+            }
+        });
+    </script>
+</body>
+</html>

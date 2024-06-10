@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Vue Category Management</title>
+    <style>
+        [v-cloak] { display: none; }
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 40px;
+            background: #f4f4f9;
+            color: #333;
+        }
+        #app {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        input[type="text"] {
+            padding: 10px;
+            margin: 10px 0;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            width: calc(100% - 24px);
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #5cb85c;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        button:hover {
+            background-color: #4cae4c;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            padding: 10px;
+            margin-top: 1px;
+            border-bottom: solid 1px #eee;
+        }
+
+        .a_link {
+            color: rgb(148, 107, 222);
+            text-decoration: none;
+        }
+
+        .a_link:hover{
+            opacity: 0.8;
+
+        }
+
+        .delete_button {
+            background-color: white;
+            color: rgb(148, 107, 222);
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            border: solid 1px;
+            padding-left: 11px;
+            padding-right: 9px;
+            padding-top: 5px;
+            padding-bottom: 5px;
+            box-shadow: none;
+            float: right;
+            margin-top: 0px;
+        }
+
+        .delete_button:hover {
+            background-color: rgba(254, 254, 254, 0.29);
+            color: #ddd;
+            /*border: solid 1px rgb(148, 107, 222);*/
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h1>Category Management</h1>
+        <input type="text" v-model="newCategory" placeholder="Enter new category name">
+        <button @click="addCategory">Add Category</button>
+
+        <ul v-cloak>
+            <li v-for="(category, index) in categories" :key="category.id">
+                <a class="a_link" :href="`/products/${category.id}`"> [[ index + 1 ]]. [[ category.name ]] </a>
+                <button class="delete_button" @click="deleteCategory(category.id)">Delete</button>
+            </li>
+        </ul>
+
+    </div>
+
+    <script src="/static/js/vue.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script>
+        new Vue({
+            el: '#app',
+            delimiters: ['[[', ']]'],
+            data: {
+                categories: [],
+                newCategory: ''
+            },
+            mounted() {
+                this.getCategories();
+            },
+            methods: {
+                getCategories() {
+                    axios.get('/categories')
+                        .then(response => {
+                            this.categories = response.data;
+                        })
+                        .catch(error => {
+                            console.error('There was an error!', error);
+                        });
+                },
+                addCategory() {
+                    axios.post('/categories', { name: this.newCategory })
+                        .then(response => {
+                            this.categories.push(response.data);
+                            this.newCategory = '';  // Clear input after adding
+                        })
+                        .catch(error => {
+                            console.error('Error adding category!', error);
+                        });
+                },
+                deleteCategory(id) {
+                    axios.delete(`/delete_categories/${id}`)
+                        .then(response => {
+                            this.categories = this.categories.filter(c => c.id !== id);
+                        })
+                        .catch(error => {
+                            console.error('Error deleting category!', error);
+                        });
+                }
+            }
+        });
+    </script>
+</body>
+</html>
